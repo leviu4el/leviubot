@@ -1,4 +1,7 @@
-﻿using Microsoft.Extensions.Configuration;
+﻿using Discord.WebSocket;
+using Microsoft.Extensions.Configuration;
+using Newtonsoft.Json;
+using Source.DataClasses;
 
 namespace Source
 {
@@ -7,11 +10,25 @@ namespace Source
         public static IConfiguration config;
         public static string baseDir;
 
+        //public static List<Rank> Ranks = Enum.GetValues(typeof(Rank)).Cast<Rank>().ToList();
+        //public static Dictionary<Rank, string> RankEmoji = new Dictionary<Rank, string>();
+        public static Dictionary<ArType, string> ArEmoji = new Dictionary<ArType, string>();
+
         private static void Main(string[] args) { }
         public static void Setup()
         {
             baseDir = GetBaseDir();
             config = GetConfig();
+        }
+
+        public async static Task LoadData(IReadOnlyCollection<Discord.Emote> emotes)
+        {
+            ArEmoji = emotes
+               .Where(emote => emote.Name.StartsWith(nameof(ArType)))
+               .Where(emote => Enum.GetNames(typeof(ArType)).Select(x => nameof(ArType) + x).Any(x => x == emote.Name))
+               .Select(emote => new { Emote = emote, ArType = (ArType)Enum.Parse(typeof(ArType), emote.Name.Substring(nameof(ArType).Length)) })
+               .OrderBy(x => x.ArType)
+               .ToDictionary(x => x.ArType, x => $"<:{x.Emote.Name}:{x.Emote.Id}>"); 
         }
 
         private static string GetBaseDir()
@@ -34,6 +51,21 @@ namespace Source
                 .SetBasePath(baseDir)
                 .AddYamlFile("config.yml")
                 .Build();
+        }
+        public static dynamic GetResult(string link, bool spamthing = false)
+        {
+            using (var client = new HttpClient())
+            {
+                if (spamthing) client.DefaultRequestHeaders.Add("X-Session-ID", "She's not that flat");
+                client.DefaultRequestHeaders.Add("User-Agent", "leviudude thing");
+
+
+                var endpoint = new Uri(link);
+                var result = client.GetAsync(endpoint).Result;
+                var json = result.Content.ReadAsStringAsync().Result;
+
+                return JsonConvert.DeserializeObject<dynamic>(json)!;
+            }
         }
     }
 }

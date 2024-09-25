@@ -1,7 +1,9 @@
-﻿using Newtonsoft.Json;
+﻿using Discord;
+using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
+using System.Text.Json;
 using static Source.DataClasses.Achievement;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Source.DataClasses
 {
@@ -126,7 +128,7 @@ namespace Source.DataClasses
             //    return Program._storedUsers.First(x => x.user_id == discordId).tetris_id;
             //}
 
-            var jsonObject = GetResult($"https://ch.tetr.io/api/users/search/discord:{discordId}");
+            var jsonObject = Source.Program.GetResult($"https://ch.tetr.io/api/users/search/discord:{discordId}");
 
             if (!Convert.ToBoolean(jsonObject.success) || jsonObject.data == null)
                 throw new EmbedException(
@@ -153,11 +155,8 @@ namespace Source.DataClasses
         }
         public bool GetUserInfo()
         {
-            var obj = GetResult($"https://ch.tetr.io/api/users/{UUID}", spamThing);
-            Log.Print($"{obj}");
-            Console.WriteLine(1);
+            var obj = Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}", spamThing);
             if (obj.data == null) return false;
-            Console.WriteLine(1);
             var data = obj.data;
             Info.Username = data.username;
             Info.UUID = data._id;
@@ -168,8 +167,6 @@ namespace Source.DataClasses
             Info.Xp = data.xp;
 
             Info.DiscordId = data.connections.discord?.id;
-
-
             Info.Ar = data.ar;
 
 
@@ -205,7 +202,7 @@ namespace Source.DataClasses
             return true;
         }
         public void GetAll() {
-            var jsonObject = GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries", spamThing);
+            var jsonObject = Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries", spamThing);
             FetchFourtyLines      (jsonObject.data["40l"]);
             FetchBlitz            (jsonObject.data["blitz"]);
             FetchQuickPlay        (jsonObject.data["zenith"]);
@@ -214,13 +211,13 @@ namespace Source.DataClasses
             FetchZen              (jsonObject.data["zen"]);
             FetchAchievements     (jsonObject.data["achievements"]);
         }
-        public void GetFourtyLines() =>     FetchFourtyLines        (GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/40l", spamThing).data);
-        public void GetBlitz() =>           FetchBlitz              (GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/blitz", spamThing).data);
-        public void GetQuickPlay() =>       FetchQuickPlay          (GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/zenith", spamThing).data);
-        public void GetExpertQuickPlay() => FetchExpertQuickPlay    (GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/zenithex", spamThing).data);
-        public void GetTetraLeague() =>     FetchTetraLeague        (GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/league", spamThing).data);
-        public void GetZen() =>             FetchZen                (GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/zen", spamThing).data);
-        public void GetAchievements() =>    FetchAchievements       (GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/achievements", spamThing).data);
+        public void GetFourtyLines() =>     FetchFourtyLines        (Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/40l", spamThing).data);
+        public void GetBlitz() =>           FetchBlitz              (Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/blitz", spamThing).data);
+        public void GetQuickPlay() =>       FetchQuickPlay          (Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/zenith", spamThing).data);
+        public void GetExpertQuickPlay() => FetchExpertQuickPlay    (Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/zenithex", spamThing).data);
+        public void GetTetraLeague() =>     FetchTetraLeague        (Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/league", spamThing).data);
+        public void GetZen() =>             FetchZen                (Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/zen", spamThing).data);
+        public void GetAchievements() =>    FetchAchievements       (Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/achievements", spamThing).data);
 
 
         private void FetchFourtyLines(dynamic data)
@@ -298,26 +295,6 @@ namespace Source.DataClasses
             foreach (dynamic achievement in allAchievements)
             {
                 Achievements.Add(Achievement.From(achievement));
-            }
-
-        }
-
-        private static dynamic GetResult(string link, bool spamthing = false)
-        {
-            using (var client = new HttpClient())
-            {
-                //client.DefaultRequestHeaders.UserAgent.ParseAdd("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36");
-
-                if (spamthing) client.DefaultRequestHeaders.Add("X-Session-ID", "She's not that flat");
-
-                client.DefaultRequestHeaders.Add("User-Agent", "leviudude thing");
-
-
-                var endpoint = new Uri(link);
-                var result = client.GetAsync(endpoint).Result;
-                var json = result.Content.ReadAsStringAsync().Result;
-
-                return JsonConvert.DeserializeObject<dynamic>(json)!;
             }
         }
     }
@@ -643,6 +620,7 @@ namespace Source.DataClasses
 
         internal static Achievement From(dynamic achievement)
         {
+            Log.Print($"{achievement}");
             Dictionary<int, ArType> arValues = new Dictionary<int, ArType>()
             {
                 { 100, ArType.Issued },
@@ -660,10 +638,10 @@ namespace Source.DataClasses
 
             ArType rank = ArType.None;
 
-            int pos = achievement.pos;
+            int pos = achievement.pos ?? -1;
 
 
-            if (achievement.rank != null) rank = arValues[achievement.rank];
+            if (achievement.rank != null) rank = arValues[int.Parse($"{achievement.rank}")];
             if (arType == art.COMPETITIVE && pos >= 0)
             {
                 if (pos < 100) rank = ArType.Top100;
@@ -712,10 +690,11 @@ namespace Source.DataClasses
 
         public static AchievementData From(dynamic data)
         {
+            Log.Print($"{data}");
             var achievement = data.achievement;
             var leaderboard = data.leaderboard as JToken;
             var cutoffs = data.cutoffs;
-
+            Log.Print($"{cutoffs}", Logtype.Warning);
             art arType = (art)achievement.art;
             rt rankType = (rt)achievement.rt;
             vt valueType = (vt)achievement.vt;
@@ -755,14 +734,13 @@ namespace Source.DataClasses
                     AchievementData[ArType.Top3] = (leaderboard[2] as dynamic).v;
                 }
 
-                if (AchievementData.Values.Any(x => $"{x}".Contains("."))) // Check is double bullshit
-                {
-                    AchievementData = AchievementData.ToDictionary(x => x.Key, x => Convert(Math.Round(x.Value, 1, MidpointRounding.ToZero), valueType));
-                }
-                else
-                {
-                    AchievementData = AchievementData.ToDictionary(x => x.Key, x => (dynamic)Math.Abs(int.Parse($"{x.Value}")));
-                }
+                Log.Print(System.Text.Json.JsonSerializer.Serialize(AchievementData, new JsonSerializerOptions { WriteIndented = true }));
+
+                AchievementData = AchievementData.ToDictionary(x => x.Key,
+                    x => $"{x}".Contains(".")
+                    ? Convert(Math.Round(decimal.Parse($"{x.Value}"), 1, MidpointRounding.ToZero), valueType)
+                    : (dynamic)Math.Abs(int.Parse($"{x.Value}"))
+                );
 
                 if (rankType == rt.PERCENTILELAX || rankType == rt.PERCENTILEMLAX)
                     AchievementData = AchievementData.Concat(new Dictionary<ArType, dynamic>() {

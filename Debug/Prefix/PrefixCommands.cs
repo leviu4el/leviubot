@@ -1,4 +1,5 @@
-﻿using Discord;
+﻿using Debug.Update;
+using Discord;
 using Discord.Commands;
 using Source.DataClasses;
 using System;
@@ -13,21 +14,11 @@ namespace Debug.Prefix
     [Summary("Test")]
     public class PrefixCommands : ModuleBase<SocketCommandContext>
     {
-        [Command("test")]
-        public async Task test(string name = null, params string[] parameters)
+        [Command("update")]
+        [RequireOwner]
+        public async Task test(params string[] parameters)
         {
-            
-            TetrisUser User = new TetrisUser(name);
-            User.GetUserInfo();
-
-            //Extensions.Require(
-            //    User.Info.Username,
-
-            //    User.TetraLeague.CurrentSeason.apm,
-            //    User.TetraLeague.CurrentSeason.pps,
-            //    User.TetraLeague.CurrentSeason.vs
-            //);
-            await Context.Message.ReplyAsync(User.Info.Username);
+            OnTimedEvent.Update();
         }
     }
 }

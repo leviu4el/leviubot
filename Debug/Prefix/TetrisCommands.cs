@@ -39,7 +39,7 @@ namespace Debug.Prefix
                     );
                     tetrisUsers.Add(tetrisUser);
                 }
-                catch (Exception ex) //Search by user failed or 
+                catch (Exception ex) 
                 {
                     reply += $"Search by discord failed +{ex.Message}";
                 }
@@ -63,11 +63,11 @@ namespace Debug.Prefix
                         );
                         tetrisUsers.Add(tetrisUser);
                     }
-                    catch (EmbedException ex) //Search by user failed or 
+                    catch (EmbedException ex) 
                     {
                         reply += $"{user} is not a valid user\n";
                     }
-                    catch (ArgumentNullException ex) //Search by user failed or 
+                    catch (ArgumentNullException ex) 
                     {
                         reply += $"{user} tetra league amp/vs/pps is null\n";
                     }
@@ -131,7 +131,7 @@ namespace Debug.Prefix
                     );
                     tetrisUsers.Add(tetrisUser);
                 }
-                catch (Exception ex) //Search by user failed or 
+                catch (Exception ex) 
                 {
                     reply += $"Search by discord failed +{ex.Message}";
                 }
@@ -155,11 +155,11 @@ namespace Debug.Prefix
                         );
                         tetrisUsers.Add(tetrisUser);
                     }
-                    catch (EmbedException ex) //Search by user failed or 
+                    catch (EmbedException ex) 
                     {
                         reply += $"{user} is not a valid user\n";
                     }
-                    catch (ArgumentNullException ex) //Search by user failed or 
+                    catch (ArgumentNullException ex) 
                     {
                         reply += $"{user} tetra league amp/vs/pps is null\n";
                     }
@@ -222,7 +222,7 @@ namespace Debug.Prefix
                     );
                     tetrisUsers.Add(tetrisUser);
                 }
-                catch (Exception ex) //Search by user failed or 
+                catch (Exception ex) 
                 {
                     reply += $"Search by discord failed +{ex.Message}";
                 }
@@ -246,11 +246,11 @@ namespace Debug.Prefix
                         );
                         tetrisUsers.Add(tetrisUser);
                     }
-                    catch (EmbedException ex) //Search by user failed or 
+                    catch (EmbedException ex) 
                     {
                         reply += $"{user} is not a valid user\n";
                     }
-                    catch (ArgumentNullException ex) //Search by user failed or 
+                    catch (ArgumentNullException ex) 
                     {
                         reply += $"{user} tetra league amp/vs/pps is null\n";
                     }
@@ -408,6 +408,7 @@ namespace Debug.Prefix
             return qc.GetShortUrl();
         }
         #endregion
-
     }
+
+
 }

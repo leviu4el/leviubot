@@ -14,6 +14,8 @@ using Microsoft.Extensions.DependencyInjection;
 
 using Source.Handler;
 using Source.DataClasses;
+using Debug.Update;
+using System.Timers;
 
 
 namespace Debug
@@ -32,7 +34,7 @@ namespace Debug
         public async Task MainAsync()
         {
             Source.Program.Setup();
-
+            
             #region discord
             discordClient = new DiscordSocketClient(new DiscordSocketConfig
             {
@@ -147,7 +149,7 @@ namespace Debug
             //twitchClient.OnConnected += (object? sender, OnConnectedArgs e) => twitchClient.JoinChannel("forestguyvt");
             #endregion
 
-
+            #region initalize
             await discordClient.LoginAsync(
                 TokenType.Bot,
                 Source.Program.config["discord:token"]
@@ -162,6 +164,34 @@ namespace Debug
                 )
             );
             twitchClient.Connect();
+            #endregion
+
+            discordClient.Ready += async () =>
+            {
+                await Source.Program.LoadData(
+                    emotes: await discordClient.Rest.GetApplicationEmotesAsync()
+                );
+
+                DateTime now = DateTime.Now;
+                DateTime nextHour = now.AddHours(1).Date.AddHours(now.Hour + 1);
+                TimeSpan timeUntilNextHour = nextHour - now;
+                await Console.Out.WriteLineAsync(timeUntilNextHour.TotalMilliseconds.ToString());
+                System.Timers.Timer initialTimer = new System.Timers.Timer((int)timeUntilNextHour.TotalMilliseconds);
+                initialTimer.Elapsed += async (sender, e) =>
+                {
+                    OnTimedEvent.Update();
+
+                    System.Timers.Timer hourlyTimer = new System.Timers.Timer(3600000); // 3600000 ms = 1 hour
+                    hourlyTimer.Elapsed += new ElapsedEventHandler(OnTimedEvent.Start);
+                    hourlyTimer.AutoReset = true;
+                    hourlyTimer.Enabled = true;
+
+                    initialTimer.Stop();
+                    initialTimer.Dispose();
+                };
+                initialTimer.AutoReset = false;
+                initialTimer.Enabled = true;
+            };
 
             await Task.Delay(-1);
 
