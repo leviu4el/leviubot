@@ -99,134 +99,195 @@ namespace Debug.Prefix
             else await Context.Message.ReplyAsync($"{reply}", allowedMentions: AllowedMentions.None);
         }
 
-        //[Command("sq")]
-        //public async Task sq(params string[] users)
-        //{
-        //    if (users.FirstOrDefault() == "help")
-        //    {
-        //        await ReplyAsync(
-        //            "`>sq` - Displays ATTACK, SPEED, DEFENSE and CHEESE of users in radar graph.\n" +
-        //            "**Usage** - `>sq [name] [name2, optional] [name3, optional]`..."
-        //        );
-        //        return;
-        //    }
+        [Command("sq")]
+        public async Task sq(params string[] users)
+        {
+            if (users.FirstOrDefault() == "help")
+            {
+                await ReplyAsync(
+                    "`>sq` - Displays ATTACK, SPEED, DEFENSE and CHEESE of users in radar graph.\n" +
+                    "**Usage** - `>sq [name] [name2, optional] [name3, optional]`..."
+                );
+                return;
+            }
 
-        //    List<TetrisUser> tetrisUsers = new List<TetrisUser>();
-        //    string reply = "";
-        //    if (users.Length == 0)
-        //    {
-        //        TetrisUser tetrisUser = GetDiscordUserStats(Context.User.Id);
-        //        if (tetrisUser != null) tetrisUsers.Add(tetrisUser);
-        //        else reply += $"{Context.User.Username} is not a valid user\n";
-        //    }
-        //    else
-        //    {
-        //        foreach (string user in users)
-        //        {
-        //            try
-        //            {
-        //                var tetrisUser = GetUserStats(user);
-        //                if (tetrisUser != null) tetrisUsers.Add(tetrisUser);
-        //                else reply += $"{user} is not a valid user\n";
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                reply += $"{user} is not a valid user\n";
-        //            }
-        //        }
-        //    }
+            List<TetrisUser> tetrisUsers = new List<TetrisUser>();
+            string reply = "";
+            if (users.Length == 0)
+            {
+                try
+                {
+                    TetrisUser tetrisUser = new TetrisUser(id: Context.User.Id);
 
-        //    if (tetrisUsers.Count > 0)
-        //    {
+                    tetrisUser.GetUserInfo();
+                    tetrisUser.GetTetraLeague();
 
-        //        var embed = new EmbedBuilder
-        //        {
-        //            Description = reply,
-        //            ImageUrl = $"{CreateTriangleChart(tetrisUsers, playstyle: false)}"
-        //        };
+                    Extensions.Require(
+                        tetrisUser.Info.Username,
 
-        //        foreach (var user in tetrisUsers)
-        //        {
-        //            embed.AddField(user.username,
-        //            $"attack: {Math.Round((decimal)(user.apm / 60 * 0.4), 4)}\n" +
-        //            $"speed: {Math.Round((decimal)(user.pps / 3.75), 4)}\n" +
-        //            $"defence: {Math.Round((decimal)(nerd.dss * 1.15), 4)}\n" +
-        //            $"cheese: {Math.Round((decimal)(nerd.ci / 110), 4)}", true);
-        //        }
+                        tetrisUser.TetraLeague.CurrentSeason.apm,
+                        tetrisUser.TetraLeague.CurrentSeason.pps,
+                        tetrisUser.TetraLeague.CurrentSeason.vs
+                    );
+                    tetrisUsers.Add(tetrisUser);
+                }
+                catch (Exception ex) //Search by user failed or 
+                {
+                    reply += $"Search by discord failed +{ex.Message}";
+                }
+            }
+            else
+            {
+                foreach (string user in users)
+                {
+                    try
+                    {
+                        var tetrisUser = new TetrisUser(user);
+                        tetrisUser.GetUserInfo();
+                        tetrisUser.GetTetraLeague();
 
-        //        //Your embed needs to be built before it is able to be sent
-        //        await Context.Message.ReplyAsync(embed: embed.Build(), allowedMentions: AllowedMentions.None);
-        //    }
-        //    else await Context.Message.ReplyAsync($"{reply}", allowedMentions: AllowedMentions.None);
-        //}
+                        Extensions.Require(
+                            tetrisUser.Info.Username,
 
-        //[Command("vs")]
-        //public async Task vs(params string[] users)
-        //{
-        //    if (users.FirstOrDefault() == "help")
-        //    {
-        //        await ReplyAsync(
-        //            "`>psq` - Same thing as sq, but instead of each end being ATTACK, SPEED, DEFENSE and CHEESE, you have OPENER, STRIDE, PLONK and INF DS.\n" +
-        //            "**Usage** - `>psq [name] [name2, optional] [name3, optional]`..."
-        //        );
-        //        return;
-        //    }
-        //    List<TetrisUser> tetrisUsers = new List<TetrisUser>();
-        //    string reply = "";
-        //    if (users.Length == 0)
-        //    {
-        //        TetrisUser tetrisUser = GetDiscordUserStats(Context.User.Id);
-        //        if (tetrisUser != null) tetrisUsers.Add(tetrisUser);
-        //        else reply += $"{Context.User.Username} is not a valid user\n";
-        //    }
-        //    else
-        //    {
-        //        foreach (string user in users)
-        //        {
-        //            try
-        //            {
-        //                var tetrisUser = GetUserStats(user);
-        //                if (tetrisUser != null) tetrisUsers.Add(tetrisUser);
-        //                else reply += $"{user} is not a valid user\n";
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                reply += $"{user} is not a valid user\n";
-        //            }
-        //        }
-        //    }
+                            tetrisUser.TetraLeague.CurrentSeason.apm,
+                            tetrisUser.TetraLeague.CurrentSeason.pps,
+                            tetrisUser.TetraLeague.CurrentSeason.vs
+                        );
+                        tetrisUsers.Add(tetrisUser);
+                    }
+                    catch (EmbedException ex) //Search by user failed or 
+                    {
+                        reply += $"{user} is not a valid user\n";
+                    }
+                    catch (ArgumentNullException ex) //Search by user failed or 
+                    {
+                        reply += $"{user} tetra league amp/vs/pps is null\n";
+                    }
+                }
+            }
 
-        //    if (tetrisUsers.Count > 0)
-        //    {
-        //        var embed = new EmbedBuilder
-        //        {
-        //            Description = reply,
-        //            ImageUrl = $"{CreateVersusChart(tetrisUsers)}"
-        //        };
-        //        //'APM', 'PPS', 'VS', 'APP', 'DS/Second', 'DS/Piece', 'APP+DS/Piece', 'VS/APM', 'Cheese Index', 'Garbage Effi.'
-        //        foreach (var user in tetrisUsers)
-        //        {
-        //            var nerd = user.TetraLeague.CurrentSeason.NerdStats;
-        //            embed.AddField(user.Info.Username,
-        //            $"apm: {Math.Round((decimal)user.TetraLeague.CurrentSeason.Apm, 4)}\n" +
-        //            $"pps: {Math.Round((decimal)user.TetraLeague.CurrentSeason.Pps, 4)}\n" +
-        //            $"vs: {Math.Round((decimal)user.TetraLeague.CurrentSeason.Vs, 4)}\n" +
-        //            $"app: {Math.Round((decimal)nerd.app, 4)}\n" +
-        //            $"ds/second: {Math.Round((decimal)nerd.dss, 4)}\n" +
-        //            $"ds/piece: {Math.Round((decimal)nerd.dsp, 4)}\n" +
-        //            $"app+ds/piece: {Math.Round((decimal)nerd.dsapp, 4)}\n" +
-        //            $"vs/apm: {Math.Round((decimal)nerd.vsapm, 4)}\n" +
-        //            $"cheese index: {Math.Round((decimal)nerd.ci, 4)}\n" +
-        //            $"garbage effi: {Math.Round((decimal)nerd.ge, 4)}"
-        //            , true);
+            if (tetrisUsers.Count > 0)
+            {
 
-        //        }
+                var embed = new EmbedBuilder
+                {
+                    Description = reply,
+                    ImageUrl = $"{CreateTriangleChart(tetrisUsers, playstyle: false)}"
+                };
 
-        //        //Your embed needs to be built before it is able to be sent
-        //        await Context.Message.ReplyAsync(embed: embed.Build(), allowedMentions: AllowedMentions.None);
-        //    }
-        //    else await Context.Message.ReplyAsync($"{reply}", allowedMentions: AllowedMentions.None);
-        //}
+                foreach (var User in tetrisUsers)
+                {
+                    var nerd = User.TetraLeague.CurrentSeason.NerdStats;
+                    embed.AddField(User.Info.Username,
+                    $"attack: {Math.Round((decimal)(User.TetraLeague.CurrentSeason.apm / 60 * 0.4), 4)}\n" +
+                    $"speed: {Math.Round((decimal)(User.TetraLeague.CurrentSeason.pps / 3.75), 4)}\n" +
+                    $"defence: {Math.Round((decimal)(nerd.dss * 1.15), 4)}\n" +
+                    $"cheese: {Math.Round((decimal)(nerd.ci / 110), 4)}", true);
+                }
+
+                //Your embed needs to be built before it is able to be sent
+                await Context.Message.ReplyAsync(embed: embed.Build(), allowedMentions: AllowedMentions.None);
+            }
+            else await Context.Message.ReplyAsync($"{reply}", allowedMentions: AllowedMentions.None);
+        }
+
+        [Command("vs")]
+        public async Task vs(params string[] users)
+        {
+            if (users.FirstOrDefault() == "help")
+            {
+                await ReplyAsync(
+                    "`>psq` - Same thing as sq, but instead of each end being ATTACK, SPEED, DEFENSE and CHEESE, you have OPENER, STRIDE, PLONK and INF DS.\n" +
+                    "**Usage** - `>psq [name] [name2, optional] [name3, optional]`..."
+                );
+                return;
+            }
+            List<TetrisUser> tetrisUsers = new List<TetrisUser>();
+            string reply = "";
+            if (users.Length == 0)
+            {
+                try
+                {
+                    TetrisUser tetrisUser = new TetrisUser(id: Context.User.Id);
+
+                    tetrisUser.GetUserInfo();
+                    tetrisUser.GetTetraLeague();
+
+                    Extensions.Require(
+                        tetrisUser.Info.Username,
+
+                        tetrisUser.TetraLeague.CurrentSeason.apm,
+                        tetrisUser.TetraLeague.CurrentSeason.pps,
+                        tetrisUser.TetraLeague.CurrentSeason.vs
+                    );
+                    tetrisUsers.Add(tetrisUser);
+                }
+                catch (Exception ex) //Search by user failed or 
+                {
+                    reply += $"Search by discord failed +{ex.Message}";
+                }
+            }
+            else
+            {
+                foreach (string user in users)
+                {
+                    try
+                    {
+                        var tetrisUser = new TetrisUser(user);
+                        tetrisUser.GetUserInfo();
+                        tetrisUser.GetTetraLeague();
+
+                        Extensions.Require(
+                            tetrisUser.Info.Username,
+
+                            tetrisUser.TetraLeague.CurrentSeason.apm,
+                            tetrisUser.TetraLeague.CurrentSeason.pps,
+                            tetrisUser.TetraLeague.CurrentSeason.vs
+                        );
+                        tetrisUsers.Add(tetrisUser);
+                    }
+                    catch (EmbedException ex) //Search by user failed or 
+                    {
+                        reply += $"{user} is not a valid user\n";
+                    }
+                    catch (ArgumentNullException ex) //Search by user failed or 
+                    {
+                        reply += $"{user} tetra league amp/vs/pps is null\n";
+                    }
+                }
+            }
+
+            if (tetrisUsers.Count > 0)
+            {
+                var embed = new EmbedBuilder
+                {
+                    Description = reply,
+                    ImageUrl = $"{CreateVersusChart(tetrisUsers)}"
+                };
+                //'APM', 'PPS', 'VS', 'APP', 'DS/Second', 'DS/Piece', 'APP+DS/Piece', 'VS/APM', 'Cheese Index', 'Garbage Effi.'
+                foreach (var user in tetrisUsers)
+                {
+                    var nerd = user.TetraLeague.CurrentSeason.NerdStats;
+                    embed.AddField(user.Info.Username,
+                    $"apm: {Math.Round((decimal)user.TetraLeague.CurrentSeason.apm, 4)}\n" +
+                    $"pps: {Math.Round((decimal)user.TetraLeague.CurrentSeason.pps, 4)}\n" +
+                    $"vs: {Math.Round((decimal)user.TetraLeague.CurrentSeason.vs, 4)}\n" +
+                    $"app: {Math.Round((decimal)nerd.app, 4)}\n" +
+                    $"ds/second: {Math.Round((decimal)nerd.dss, 4)}\n" +
+                    $"ds/piece: {Math.Round((decimal)nerd.dsp, 4)}\n" +
+                    $"app+ds/piece: {Math.Round((decimal)nerd.dsapp, 4)}\n" +
+                    $"vs/apm: {Math.Round((decimal)nerd.vsapm, 4)}\n" +
+                    $"cheese index: {Math.Round((decimal)nerd.ci, 4)}\n" +
+                    $"garbage effi: {Math.Round((decimal)nerd.ge, 4)}"
+                    , true);
+
+                }
+
+                //Your embed needs to be built before it is able to be sent
+                await Context.Message.ReplyAsync(embed: embed.Build(), allowedMentions: AllowedMentions.None);
+            }
+            else await Context.Message.ReplyAsync($"{reply}", allowedMentions: AllowedMentions.None);
+        }
 
         private static string CreateTriangleChart(List<TetrisUser> tetrisUsers, bool playstyle)
         {
