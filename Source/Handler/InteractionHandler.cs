@@ -2,7 +2,7 @@
 using Discord.WebSocket;
 using Discord;
 
-namespace leviubot.Handler
+namespace Source.Handler
 {
     public class InteractionHandler
     {

@@ -11,12 +11,12 @@ using TwitchLib.Communication.Clients;
 
 using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
-using leviubot.Handler;
-using static System.Runtime.InteropServices.JavaScript.JSType;
+
+using Source.Handler;
 using Source.DataClasses;
 
 
-namespace leviubot.Debug
+namespace Debug
 {
     public class Program
     {

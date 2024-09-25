@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Configuration;
 
-namespace leviubot.Source
+namespace Source
 {
     public class Program
     {

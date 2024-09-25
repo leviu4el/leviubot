@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.Json;
 using System.Threading.Tasks;
 using TwitchLib.Api.Core.Enums;
 
-namespace leviubot.Source
+namespace Source.DataClasses
 {
     public class Log // Uuuuh, dont ask
     {
