@@ -16,6 +16,8 @@ using Source.Handler;
 using Source.DataClasses;
 using Debug.Update;
 using System.Timers;
+using Debug.Prefix;
+using System.Runtime.Intrinsics.X86;
 
 
 namespace Debug
@@ -163,9 +165,10 @@ namespace Debug
                     Source.Program.config["twitch:token"]
                 )
             );
-            twitchClient.Connect();
+            //twitchClient.Connect();
             #endregion
 
+            discordClient.MessageReceived += AfkCommands.AfkResponses;
             discordClient.Ready += async () =>
             {
                 await Source.Program.LoadData(
@@ -175,7 +178,8 @@ namespace Debug
                 DateTime now = DateTime.Now;
                 DateTime nextHour = now.AddHours(1).Date.AddHours(now.Hour + 1);
                 TimeSpan timeUntilNextHour = nextHour - now;
-                await Console.Out.WriteLineAsync(timeUntilNextHour.TotalMilliseconds.ToString());
+
+                Log.Print($"Time until update: {timeUntilNextHour.Minutes}m {timeUntilNextHour.Seconds}s");
                 System.Timers.Timer initialTimer = new System.Timers.Timer((int)timeUntilNextHour.TotalMilliseconds);
                 initialTimer.Elapsed += async (sender, e) =>
                 {
@@ -194,7 +198,6 @@ namespace Debug
             };
 
             await Task.Delay(-1);
-
         }
     }
 }

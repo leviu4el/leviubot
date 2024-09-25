@@ -1,6 +1,7 @@
 ﻿using Discord;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using System.Linq;
 using System.Text.Json;
 using static Source.DataClasses.Achievement;
 using static System.Net.Mime.MediaTypeNames;
@@ -501,9 +502,9 @@ namespace Source.DataClasses
             set => _Tr = value;
         }
         private LeagueRank? _Rank;
-        public LeagueRank LeagueRank
+        public LeagueRank Rank
         {
-            get => _Rank != null ? (LeagueRank)_Rank : throw new ArgumentNullException(nameof(_Rank));
+            get => _Rank != null ? (LeagueRank)_Rank : throw new ArgumentNullException(nameof(Rank));
             set => _Rank = value;
         }
         private LeagueRank? _BestRank;
@@ -544,7 +545,28 @@ namespace Source.DataClasses
         }
         public static SeasonData From(dynamic data)
         {
-            Log.Print(data.ToString());
+            Dictionary<string, LeagueRank> ranks = new Dictionary<string, LeagueRank>()
+            {
+                { "x+", LeagueRank.Xplus },
+                { "x", LeagueRank.X },
+                { "u", LeagueRank.U },
+                { "ss", LeagueRank.SS },
+                { "s+", LeagueRank.Splus },
+                { "s", LeagueRank.S },
+                { "s-", LeagueRank.Sminus },
+                { "a+", LeagueRank.Aplus },
+                { "a", LeagueRank.A },
+                { "a-", LeagueRank.Aminus },
+                { "b+", LeagueRank.Bplus },
+                { "b", LeagueRank.B },
+                { "b-", LeagueRank.Bminus },
+                { "c+", LeagueRank.Cplus },
+                { "c", LeagueRank.C },
+                { "c-", LeagueRank.Cminus },
+                { "d+", LeagueRank.Dplus },
+                { "d", LeagueRank.D },
+            };
+
             var season = new SeasonData
             {
                 Season = data.season ?? -1,
@@ -553,11 +575,14 @@ namespace Source.DataClasses
                 Glicko = data.glicko,
                 Rd = data.rd,
                 Tr = data.tr,
-                //rank = data.rank,
-                //bestrank = data.bestrank,
-                Standing = data.standing != null ? data.standing : data.placement,
-                //NerdStats = new NerdStats((double)data.apm, (double)data.pps, (double)data.vs)
+                Rank =  ranks.TryGetValue($"{data.rank}", out LeagueRank rank) ? rank : LeagueRank.Z,
+                BestRank = ranks.TryGetValue($"{data.bestrank}", out LeagueRank bestRank) ? bestRank : LeagueRank.Z,
+                Standing = 
+                    data.standing != null ? Convert.ToInt32(data.standing) 
+                    : data.placement != null ? Convert.ToInt32(data.placement) 
+                    : -1
             };
+
             if (data.apm != null) season.apm = data.apm;
             if (data.vs != null) season.vs = data.vs;
             if (data.pps != null) season.pps = data.pps;
@@ -620,7 +645,6 @@ namespace Source.DataClasses
 
         internal static Achievement From(dynamic achievement)
         {
-            Log.Print($"{achievement}");
             Dictionary<int, ArType> arValues = new Dictionary<int, ArType>()
             {
                 { 100, ArType.Issued },
@@ -678,9 +702,9 @@ namespace Source.DataClasses
     } // done
     public class AchievementData
     {
-        public int id;
-        public string name;
-        public string description;
+        public int Id;
+        public string Name;
+        public string Description;
 
         public rt rankType;
         public vt valueType;
@@ -690,11 +714,10 @@ namespace Source.DataClasses
 
         public static AchievementData From(dynamic data)
         {
-            Log.Print($"{data}");
             var achievement = data.achievement;
             var leaderboard = data.leaderboard as JToken;
             var cutoffs = data.cutoffs;
-            Log.Print($"{cutoffs}", Logtype.Warning);
+
             art arType = (art)achievement.art;
             rt rankType = (rt)achievement.rt;
             vt valueType = (vt)achievement.vt;
@@ -755,9 +778,9 @@ namespace Source.DataClasses
 
             return new AchievementData
             {
-                id = achievement.k,
-                name = achievement.name,
-                description = achievement.desc,
+                Id = achievement.k,
+                Name = achievement.name,
+                Description = achievement.desc,
 
                 arType = arType,
 

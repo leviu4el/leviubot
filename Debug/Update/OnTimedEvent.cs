@@ -19,8 +19,9 @@ namespace Debug.Update
         public static async void Update()
         {
             var guild = Program.discordClient.GetGuild(ulong.Parse(Source.Program.config["leaderboard:guild"]));
-            List<ulong> usersIds = guild.Users.Where(x => x.Roles.Any(x => x.Id == ulong.Parse(Source.Program.config["leaderboard:role"]))).Select(x => x.Id).ToList();
+            List<ulong> usersIds = guild.Users.Where(x => x.Roles.Any(x => x.Id == ulong.Parse(Source.Program.config["leaderboard:role"]))).Select(x => x.Id).Take(3).ToList();
             List<TetrisUser> users = new List<TetrisUser>();
+            Log.Print("Loading users");
             foreach (var userid in usersIds)
             {
                 var user = new TetrisUser(null, userid, spamthing: true);
@@ -29,12 +30,12 @@ namespace Debug.Update
 
                 users.Add(user);
             }
-            Log.Print("Updating users");
+            Log.Print("Updating leaderboards");
             await Update40Lines(    users.Where(user => { try { Extensions.Require(user.FourtyLines.FinalTime); return true; } catch { return false; } }).ToList());
             await UpdateBlitz(      users.Where(user => { try { Extensions.Require(user.Blitz.Score); return true; } catch { return false; } }).ToList());
             await UpdateRating(     users.Where(user => { try { Extensions.Require(user.TetraLeague.CurrentSeason.Tr); return true; } catch { return false; } }).ToList());
             await UpdateAchivements(users);
-            Log.Print("Updating finished");
+            Log.Print("Updating leaderboards finished");
         }
 
         public static async Task Update40Lines(List<TetrisUser> users)
@@ -114,7 +115,41 @@ namespace Debug.Update
                 .ToList();
             embeds.ForEach(x => TryingSendEmbedToChannel(x, ch, embeds.IndexOf(x)));
         }
-        public static async Task UpdateRating(List<TetrisUser> users) { }
+        public static async Task UpdateRating(List<TetrisUser> users) 
+        {
+            var guild = Program.discordClient.GetGuild(ulong.Parse(Source.Program.config["leaderboard:guild"]));
+            var ch = guild.GetTextChannel(ulong.Parse(Source.Program.config["leaderboard:rating"]));
+
+            var filteredUsers = users
+                .OrderBy(x => x.TetraLeague.CurrentSeason.Tr)
+                .ToList();
+
+            var doneFilteredUsers = filteredUsers
+            .Select(x => new
+            {
+                Username = x.Info.Username,
+                Value = Math.Round(x.TetraLeague.CurrentSeason.Tr, 2),
+                RankEmoji = Source.Program.RankEmoji[x.TetraLeague.CurrentSeason.Rank]
+            });
+
+            List<string> strings = new List<string>();
+            int maxUsernameLength = doneFilteredUsers.Max(u => u.Username.Length);
+            int maxValueLength = doneFilteredUsers.Max(u => $"{u.Value}".Length);
+
+            strings = doneFilteredUsers
+                .Select(u =>
+                $"`{u.Username}`" +
+                $"{u.Username.PadRight(maxUsernameLength, invisibleChar).Replace(u.Username, string.Empty)} " +
+                $"{u.RankEmoji} {$"`{u.Value}`".PadLeft(maxValueLength + 2, invisibleChar)} ").ToList();
+
+            List<EmbedBuilder> embeds = new List<EmbedBuilder>()
+                .Concat(
+                    new EmbedBuilder() { Color = Discord.Color.Green }
+                    .AddStrings("Leaderboard", strings)
+                )
+                .ToList();
+            embeds.ForEach(x => TryingSendEmbedToChannel(x, ch, embeds.IndexOf(x)));
+        }
         public static async Task UpdateAchivements(List<TetrisUser> users)
         {
             var guild = Program.discordClient.GetGuild(ulong.Parse(Source.Program.config["leaderboard:guild"]));
@@ -132,8 +167,8 @@ namespace Debug.Update
                         {
                             new EmbedFieldBuilder()
                             {
-                                Name = achievementData.name,
-                                Value = achievementData.description
+                                Name = achievementData.Name,
+                                Value = achievementData.Description
                             },
                         }
                     };
@@ -221,9 +256,9 @@ namespace Debug.Update
                         )
                         .ToList();
 
-                    var th = ch.Threads.Any(x => x.Name == achievementData.name)
-                        ? ch.Threads.First(x => x.Name == achievementData.name)
-                        : await ch.CreateThreadAsync(achievementData.name, ThreadType.PublicThread, ThreadArchiveDuration.OneWeek);
+                    var th = ch.Threads.Any(x => x.Name == achievementData.Name)
+                        ? ch.Threads.First(x => x.Name == achievementData.Name)
+                        : await ch.CreateThreadAsync(achievementData.Name, ThreadType.PublicThread, ThreadArchiveDuration.OneWeek);
 
                     embeds.ForEach(x => TryingSendEmbedToThread(x, th, embeds.IndexOf(x)));
                     var Th_messages = (await th.GetMessagesAsync().FlattenAsync())

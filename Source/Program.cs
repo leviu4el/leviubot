@@ -11,7 +11,7 @@ namespace Source
         public static string baseDir;
 
         //public static List<Rank> Ranks = Enum.GetValues(typeof(Rank)).Cast<Rank>().ToList();
-        //public static Dictionary<Rank, string> RankEmoji = new Dictionary<Rank, string>();
+        public static Dictionary<LeagueRank, string> RankEmoji = new Dictionary<LeagueRank, string>();
         public static Dictionary<ArType, string> ArEmoji = new Dictionary<ArType, string>();
 
         private static void Main(string[] args) { }
@@ -28,7 +28,14 @@ namespace Source
                .Where(emote => Enum.GetNames(typeof(ArType)).Select(x => nameof(ArType) + x).Any(x => x == emote.Name))
                .Select(emote => new { Emote = emote, ArType = (ArType)Enum.Parse(typeof(ArType), emote.Name.Substring(nameof(ArType).Length)) })
                .OrderBy(x => x.ArType)
-               .ToDictionary(x => x.ArType, x => $"<:{x.Emote.Name}:{x.Emote.Id}>"); 
+               .ToDictionary(x => x.ArType, x => $"<:{x.Emote.Name}:{x.Emote.Id}>");
+
+            RankEmoji = emotes
+               .Where(emote => emote.Name.StartsWith(nameof(LeagueRank)))
+               .Where(emote => Enum.GetNames(typeof(LeagueRank)).Select(x => nameof(LeagueRank) + x).Any(x => x == emote.Name))
+               .Select(emote => new { Emote = emote, ArType = (LeagueRank)Enum.Parse(typeof(LeagueRank), emote.Name.Substring(nameof(LeagueRank).Length)) })
+               .OrderBy(x => x.ArType)
+               .ToDictionary(x => x.ArType, x => $"<:{x.Emote.Name}:{x.Emote.Id}>");
         }
 
         private static string GetBaseDir()

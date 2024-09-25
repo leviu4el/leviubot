@@ -16,9 +16,16 @@ namespace Debug.Prefix
     {
         [Command("update")]
         [RequireOwner]
-        public async Task test(params string[] parameters)
+        public async Task update(params string[] parameters)
         {
             OnTimedEvent.Update();
+        }
+
+        [Command("test")]
+        [RequireOwner]
+        public async Task test(params string[] parameters)
+        {
+            await ReplyAsync(string.Join(" ", Source.Program.RankEmoji.Values));
         }
     }
 }
