@@ -6,7 +6,7 @@ namespace Debug.Prefix
 {
     public class AfkCommands : ModuleBase<SocketCommandContext> //Old code from back project
     {
-        private static string FilePath = Source.Program.baseDir + "usersettings.json";
+        private static string FilePath = Path.Combine(Source.Program.baseDir, "usersettings.json");
         private static List<UserSettings> userSettings = new List<UserSettings>();
 
         [Command("afk")]
@@ -192,7 +192,6 @@ namespace Debug.Prefix
 
             UserSettings user = userSettings.FirstOrDefault(n => n.UserId == arg.Author.Id);
 
-            // Exit early if the user is not found or AFK is not enabled
             if (user == null || !user.AfkEnabled) return;
 
             long dif = arg.CreatedAt.Ticks / TimeSpan.TicksPerSecond - user.AfkTime;

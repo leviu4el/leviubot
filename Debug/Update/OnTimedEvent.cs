@@ -19,7 +19,7 @@ namespace Debug.Update
         public static async void Update()
         {
             var guild = Program.discordClient.GetGuild(ulong.Parse(Source.Program.config["leaderboard:guild"]));
-            List<ulong> usersIds = guild.Users.Where(x => x.Roles.Any(x => x.Id == ulong.Parse(Source.Program.config["leaderboard:role"]))).Select(x => x.Id).Take(3).ToList();
+            List<ulong> usersIds = guild.Users.Where(x => x.Roles.Any(x => x.Id == ulong.Parse(Source.Program.config["leaderboard:role"]))).Select(x => x.Id).ToList();
             List<TetrisUser> users = new List<TetrisUser>();
             Log.Print("Loading users");
             foreach (var userid in usersIds)
@@ -122,6 +122,7 @@ namespace Debug.Update
 
             var filteredUsers = users
                 .OrderBy(x => x.TetraLeague.CurrentSeason.Tr)
+                .Reverse()
                 .ToList();
 
             var doneFilteredUsers = filteredUsers

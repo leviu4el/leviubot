@@ -171,7 +171,7 @@ namespace Debug
             discordClient.MessageReceived += AfkCommands.AfkResponses;
             discordClient.Ready += async () =>
             {
-                await Source.Program.LoadData(
+                await Source.Program.LoadEmoji(
                     emotes: await discordClient.Rest.GetApplicationEmotesAsync()
                 );
 

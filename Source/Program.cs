@@ -2,6 +2,7 @@
 using Microsoft.Extensions.Configuration;
 using Newtonsoft.Json;
 using Source.DataClasses;
+using System.Text.Json.Nodes;
 
 namespace Source
 {
@@ -9,8 +10,9 @@ namespace Source
     {
         public static IConfiguration config;
         public static string baseDir;
+        public static List<StoredUser> storedUsers = new List<StoredUser>();
 
-        //public static List<Rank> Ranks = Enum.GetValues(typeof(Rank)).Cast<Rank>().ToList();
+
         public static Dictionary<LeagueRank, string> RankEmoji = new Dictionary<LeagueRank, string>();
         public static Dictionary<ArType, string> ArEmoji = new Dictionary<ArType, string>();
 
@@ -19,9 +21,10 @@ namespace Source
         {
             baseDir = GetBaseDir();
             config = GetConfig();
+            storedUsers = LoadStoredUsers();
         }
 
-        public async static Task LoadData(IReadOnlyCollection<Discord.Emote> emotes)
+        public async static Task LoadEmoji(IReadOnlyCollection<Discord.Emote> emotes)
         {
             ArEmoji = emotes
                .Where(emote => emote.Name.StartsWith(nameof(ArType)))
@@ -59,6 +62,28 @@ namespace Source
                 .AddYamlFile("config.yml")
                 .Build();
         }
+        private static List<StoredUser> LoadStoredUsers()
+        {
+            string path = Path.Combine(baseDir, "users.json");
+            if (!File.Exists(path)) File.Create(path);
+            return JsonConvert.DeserializeObject<List<StoredUser>>(File.ReadAllText(path)) ?? new List<StoredUser>();
+        }
+        public static void SaveUser(ulong discord_id, string tetris_id)
+        {
+            storedUsers.Add(new StoredUser
+            {
+                discord_id = discord_id,
+                tetris_id = tetris_id
+            });
+            string json = JsonConvert.SerializeObject(Program.storedUsers, Formatting.Indented);
+            File.WriteAllText(Path.Combine(baseDir,"users.json"), json);
+        }
+        public class StoredUser
+        {
+            public ulong discord_id;
+            public string tetris_id;
+        }
+
         public static dynamic GetResult(string link, bool spamthing = false)
         {
             using (var client = new HttpClient())

@@ -1,4 +1,5 @@
 ﻿using Discord;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using System.Linq;
@@ -124,11 +125,10 @@ namespace Source.DataClasses
         }
         public static string CheckDiscord(ulong discordId)
         {
-            //if (Program._storedUsers.Any(x => x.user_id == discordId))
-            //{
-            //    return Program._storedUsers.First(x => x.user_id == discordId).tetris_id;
-            //}
-
+            if (Source.Program.storedUsers.Any(x => x.discord_id == discordId))
+            {
+                return Source.Program.storedUsers.First(x => x.discord_id == discordId).tetris_id;
+            }
             var jsonObject = Source.Program.GetResult($"https://ch.tetr.io/api/users/search/discord:{discordId}");
 
             if (!Convert.ToBoolean(jsonObject.success) || jsonObject.data == null)
@@ -142,16 +142,7 @@ namespace Source.DataClasses
                     title: "Search by discord connection fails"
                 );
 
-            #region add extra user
-            //Program._storedUsers.Add(new StoredUser
-            //{
-            //    user_id = discordId,
-            //    tetris_id = jsonObject.data.user._id
-            //});
-            //string json = JsonConvert.SerializeObject(Program._storedUsers, Formatting.Indented);
-            //File.WriteAllText("users.json", json);
-            #endregion
-
+            Source.Program.SaveUser(discordId, (string)jsonObject.data.user._id);
             return jsonObject.data.user._id;
         }
         public bool GetUserInfo()
@@ -191,10 +182,9 @@ namespace Source.DataClasses
             {
                 if (arValues.TryGetValue(type, out string arString))
                 {
-                    // Use TryGetValue from JObject and cast the JToken to an int
                     if (data.ar_counts.TryGetValue(arString, out JToken token) && token.Type == JTokenType.Integer)
                     {
-                        int value = token.ToObject<int>(); // Convert the JToken to an int
+                        int value = token.ToObject<int>();
                         arCounts.Add(type, value);
                     }
                 }
@@ -221,9 +211,10 @@ namespace Source.DataClasses
         public void GetAchievements() =>    FetchAchievements       (Source.Program.GetResult($"https://ch.tetr.io/api/users/{UUID}/summaries/achievements", spamThing).data);
 
 
-        private void FetchFourtyLines(dynamic data)
+        private bool FetchFourtyLines(dynamic data)
         {
-            if (data == null) return;
+            if (data == null) return false;
+            if (data.record == null) return false;
             FourtyLines.Rank = data.rank;
 
             var record = data.record;
@@ -238,10 +229,12 @@ namespace Source.DataClasses
             FourtyLines.PiecesPlaced = record.results.stats.piecesplaced;
 
             FourtyLines.FinalTime = record.results.stats.finaltime;
+            return true;
         }
         private bool FetchBlitz(dynamic data)
         {
             if (data == null) return false;
+            if (data.record == null) return false;
             Blitz.Rank = data.rank;
 
             var record = data.record;
@@ -262,15 +255,15 @@ namespace Source.DataClasses
         }
         private void FetchQuickPlay(dynamic data)
         {
-            if (data == null) return;
+            
         }
         private void FetchExpertQuickPlay(dynamic data)
         {
-            if (data == null) return;
+            
         }
-        private void FetchTetraLeague(dynamic data)
+        private bool FetchTetraLeague(dynamic data)
         {
-            if (data == null) return;
+            if (data == null) return false;
             TetraLeague.seasons = [SeasonData.From(data)]; // current season
 
             var past = data.past as JObject;
@@ -281,22 +274,24 @@ namespace Source.DataClasses
 
             TetraLeague.seasons.First(x => x.Season == -1).Season = TetraLeague.seasons.Max(x => x.Season) + 1;  // current season
             TetraLeague.CurrentSeason = TetraLeague.seasons.First();
-
+            return true;
         }
-        private void FetchZen(dynamic data)
+        private bool FetchZen(dynamic data)
         {
-            if (data == null) return;
+            if (data == null) return false;
             Zen.Level = data.level;
             Zen.Score = data.score;
+            return true;
         }
-        private void FetchAchievements(dynamic data)
+        private bool FetchAchievements(dynamic data)
         {
-            if (data == null) return;
+            if (data == null) return false;
             var allAchievements = data as JToken;
             foreach (dynamic achievement in allAchievements)
             {
                 Achievements.Add(Achievement.From(achievement));
             }
+            return true;
         }
     }
     public class UserInfo
@@ -756,8 +751,6 @@ namespace Source.DataClasses
                     AchievementData[ArType.Top5] = (leaderboard[4] as dynamic).v;
                     AchievementData[ArType.Top3] = (leaderboard[2] as dynamic).v;
                 }
-
-                Log.Print(System.Text.Json.JsonSerializer.Serialize(AchievementData, new JsonSerializerOptions { WriteIndented = true }));
 
                 AchievementData = AchievementData.ToDictionary(x => x.Key,
                     x => $"{x}".Contains(".")

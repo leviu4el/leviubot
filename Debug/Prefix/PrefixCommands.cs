@@ -1,6 +1,7 @@
 ﻿using Debug.Update;
 using Discord;
 using Discord.Commands;
+using Newtonsoft.Json;
 using Source.DataClasses;
 using System;
 using System.Collections.Generic;
@@ -25,7 +26,7 @@ namespace Debug.Prefix
         [RequireOwner]
         public async Task test(params string[] parameters)
         {
-            await ReplyAsync(string.Join(" ", Source.Program.RankEmoji.Values));
+            await ReplyAsync(JsonConvert.SerializeObject(Source.Program.storedUsers, Formatting.Indented));
         }
     }
 }

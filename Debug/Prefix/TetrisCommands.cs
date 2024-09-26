@@ -410,5 +410,32 @@ namespace Debug.Prefix
         #endregion
     }
 
+    public class UselessPrefixCommands : ModuleBase<SocketCommandContext>
+    {
+        [Command("leaderboard")]
+        [RequireOwner]
+        public async Task CreatingLeaderboardBtn()
+        {
+            await Context.Message.DeleteAsync();
+            var embed = new EmbedBuilder
+            {
+                Title = "Обновление таблиц",
+                Description = "Проверьте подключен ли у вас discord к tetr io",
+                Color = Discord.Color.Green
+            };
 
+            var component = new ComponentBuilder()
+                .WithButton(
+                    new ButtonBuilder()
+                    {
+                        CustomId = "leaderboardBtn",
+                        Style = ButtonStyle.Success,
+                        Emote = new Emoji("✅")
+                    }
+                )
+                .Build();
+
+            await ReplyAsync(embed: embed.Build(), components: component);
+        }
+    }
 }
