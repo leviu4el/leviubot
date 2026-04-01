@@ -22,4 +22,10 @@
 	<ItemGroup>
 	  <ProjectReference Include="..\api\api.csproj" />
 	</ItemGroup>
+
+	<ItemGroup>
+	  <None Update="config.yml">
+	    <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+	  </None>
+	</ItemGroup>
 </Project>
